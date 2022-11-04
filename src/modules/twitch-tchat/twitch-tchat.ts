@@ -61,28 +61,36 @@ export class TwitchTchat extends Module
      * Opens a connection to the Twitch Tchat
      * @param {string} token Authentication token to use to identify the user on the tchat
      */
-    connect(token: string)
+    async connect(token: string)
     {
         this._tmiClient = new tmi.Client({
             identity: {
                 username: `MicheLMD`,
-                password: `oauth:${token}`
+                password: `oauth:${ token }`
             },
             channels: ['lesmoulinsdudev']
         })
 
-        this._tmiClient.connect();
+        try
+        {
+            await this._tmiClient.connect();
 
-        this._tmiClient.on("message", (channel: string, userstate: tmi.ChatUserstate, message: string, self: boolean) => {
+            this._tmiClient.on("message", (channel: string, userstate: tmi.ChatUserstate, message: string, self: boolean) =>
+            {
 
-            const m: TwitchTchatMessage = {
-                message: message,
-                user: userstate.username ?? "",
-                reward: userstate["custom-reward-id"] ?? "",
-                self: self
-            };
+                const m: TwitchTchatMessage = {
+                    message: message,
+                    user: userstate.username ?? "",
+                    reward: userstate["custom-reward-id"] ?? "",
+                    self: self
+                };
 
-            this.emit(MessageType.TW_MESSAGE, m)
-        })
+                this.emit(MessageType.TW_MESSAGE, m)
+            })
+        }
+        catch (error)
+        {
+
+        }
     }
 }
