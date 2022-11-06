@@ -1,7 +1,6 @@
 import { Module, ModuleData } from "../module";
 import tmi from "tmi.js";
 import { TwitchTchatMessage } from "./twitch-tchat-message";
-import { MessageType } from "../../messenger/message-type";
 
 export type TwitchTchatData = ModuleData & {
 
@@ -25,7 +24,7 @@ export class TwitchTchat extends Module
 
         this._tmiClient = null;
 
-        this.addListener(MessageType.TW_TOKEN, (token: string) =>
+        this.addListener("tw_token", (token: string) =>
         {
             this.connect(token);
         })
@@ -54,7 +53,7 @@ export class TwitchTchat extends Module
      */
     async start(): Promise<void>
     {
-        this.emit(MessageType.TW_REQUIRE_SCOPE, "chat:read");
+        this.emit("tw_require_scope", "chat:read");
     }
 
     /**
@@ -85,7 +84,7 @@ export class TwitchTchat extends Module
                     self: self
                 };
 
-                this.emit(MessageType.TW_MESSAGE, m)
+                this.emit("tw_message", m)
             })
         }
         catch (error)

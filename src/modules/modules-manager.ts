@@ -6,7 +6,8 @@ import { Module } from "./module";
 import { ModuleSetting, ModuleSettingData } from "./module-setting";
 import { TwitchAuth } from "./twitch-auth/twitch-auth";
 import { TwitchTchat } from "./twitch-tchat/twitch-tchat";
-import { HTTPMethod } from "./web-server/http-method";
+import { HttpMethod } from "./web-server/http-method";
+import { HttpRequestData } from "./web-server/http-request-data";
 import { WebServer } from "./web-server/web-server";
 
 /**
@@ -24,10 +25,12 @@ export class ModulesManager
     public constructor()
     {
         this._availableModules = new Map<string, Module>();
+    }
 
-        this.initializeModules();
-
-        this.createWebServerRoutes();
+    async initialize()
+    {
+        await this.initializeModules();
+        await this.createWebServerRoutes();
     }
 
     /**
@@ -73,15 +76,15 @@ export class ModulesManager
     /**
      * Creates modules management routes
      */
-    private createWebServerRoutes()
+    private async createWebServerRoutes()
     {
         //Gets the list of all available modules
-        messenger.emit(MessageType.WS_ADD_ROUTE, {
+        messenger.emit("ws_add_route", {
             url :"/modules",
-            method: HTTPMethod.GET,
-            callback: (data: any) => {
+            method: HttpMethod.GET,
+            callback: async (data: HttpRequestData) => {
                 return {
-                    satusCode: 200,
+                    statusCode: 200,
                     body: this.getModulesSettings(),
                     contentType: "application/json"
                 };
@@ -89,10 +92,10 @@ export class ModulesManager
         });
 
         //Updates settings of a module
-        messenger.emit(MessageType.WS_ADD_ROUTE, {
+        messenger.emit("ws_add_route", {
             url: "/modules/:moduleName",
-            method: HTTPMethod.POST,
-            callback: async (data: any) => {
+            method: HttpMethod.POST,
+            callback: async (data: HttpRequestData) => {
                 
                 const module = this._availableModules.get(data.params.moduleName);
 
@@ -109,7 +112,7 @@ export class ModulesManager
                 }
 
                 return {
-                    status: 200,
+                    statusCode: 200,
                     body: "{}",
                 }
             }

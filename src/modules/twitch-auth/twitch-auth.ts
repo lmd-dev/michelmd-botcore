@@ -2,9 +2,9 @@ import { daoModule } from "../../dao/dao-module";
 import { MessageType } from "../../messenger/message-type";
 import { Module, ModuleData } from "../module";
 import { ModuleSetting } from "../module-setting";
-import { HTTPMethod } from "../web-server/http-method";
-import { HTTPRequestData } from "../web-server/http-request-data";
-import { HTTPResponseData } from "../web-server/http-response-data";
+import { HttpMethod } from "../web-server/http-method";
+import { HttpRequestData } from "../web-server/http-request-data";
+import { HttpResponseData } from "../web-server/http-response-data";
 import { WebServerInfo } from "../web-server/web-server-info";
 
 export type TwitchAuthData = ModuleData & {
@@ -46,13 +46,13 @@ export class TwitchAuth extends Module
         this._webServerInfo = null;
         this._twitchToken = "";
 
-        this.addListener(MessageType.TW_REQUIRE_SCOPE, (scope: string) =>
+        this.addListener("tw_require_scope", (scope: string) =>
         {
             if (this.requiredScopes.indexOf(scope) === -1)
                 this.requiredScopes.push(scope);
         })
 
-        this.addListener(MessageType.WS_INFO, (webServerInfo: WebServerInfo) =>
+        this.addListener("ws_info", (webServerInfo: WebServerInfo) =>
         {
             this._webServerInfo = webServerInfo;
         })
@@ -113,10 +113,10 @@ export class TwitchAuth extends Module
       */
     async start(): Promise<void>
     {
-        this.emit(MessageType.WS_ADD_ROUTE, {
+        this.emit("ws_add_route", {
             url: "/twitch/auth",
-            method: HTTPMethod.GET,
-            callback: async (data: HTTPRequestData) =>
+            method: HttpMethod.GET,
+            callback: async (data: HttpRequestData) =>
             {
                 await this.getToken(data.queryString.code);
 
@@ -207,6 +207,6 @@ export class TwitchAuth extends Module
      */
     private sendToken()
     {
-        this.emit(MessageType.TW_TOKEN, this.twitchToken);
+        this.emit("tw_token", this.twitchToken);
     }
 }

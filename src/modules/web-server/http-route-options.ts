@@ -1,8 +1,11 @@
-import { HTTPMethod } from "./http-method";
-import { HTTPRequestHandler } from "./http-request-handler";
+import { HttpMethod } from "./http-method";
+import { HttpRequestHandler } from "./http-request-handler";
 
-export type HTTPRouteOptions = {
+/**
+ * Available options to create an HTTP route
+ */
+export type HttpRouteOptions = {
     url: string,
-    method: HTTPMethod,
-    callback: HTTPRequestHandler
+    method: HttpMethod,
+    callback: HttpRequestHandler
 }

@@ -18,9 +18,20 @@ export class GG extends Module
     {
         super("GG");
 
-        this.addListener(MessageType.TW_MESSAGE, (data: TwitchTchatMessage) => {
+        this.addListener("tw_message", (data: TwitchTchatMessage) => {
             if(this.enabled && data.reward === process.env.GG_REWARD)
-                console.log("GG !!!!!!");
+            {
+                this.emit("ws_send_on_stream", {
+                    streamName: "obs",
+                    message: JSON.stringify({
+                        module: "gg",
+                        data: {
+                            username: data.user,
+                            message: data.message
+                        }
+                    })
+                })
+            }
         })
     }
 }

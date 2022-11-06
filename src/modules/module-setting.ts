@@ -1,5 +1,8 @@
 import { ModuleSettingType } from "./module-setting-type";
 
+/**
+ * Structure of a module setting
+ */
 export type ModuleSettingData = {
     name: string,
     value: string,

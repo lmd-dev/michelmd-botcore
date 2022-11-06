@@ -1,4 +1,3 @@
-import { MessageCallback } from "./message-callback";
 import { MessageType } from "./message-type";
 
 /**
@@ -7,25 +6,25 @@ import { MessageType } from "./message-type";
 class Messenger
 {
     //Map of event managers
-    private _events: Map<MessageType, MessageCallback[]>;
-    public get events(): Map<MessageType, MessageCallback[]> { return this._events; };
-    
+    private _events: Map<string, CallableFunction[]>;
+    public get events(): Map<string, CallableFunction[]> { return this._events; };
+
     /**
      * Constructor
      */
     constructor()
     {
-        this._events = new Map<MessageType, MessageCallback[]>();
+        this._events = new Map<string, CallableFunction[]>();
     }
 
     /**
      * Adds a new listener on a message
-     * @param {MessageType} messageType Type of message to listen 
-     * @param {MessageCallback} callback Event manager to call 
+     * @param {string} messageType Type of message to listen 
+     * @param {CallableFuction} callback Event manager to call 
      */
-    addListener(messageType: MessageType, callback: MessageCallback)
+    addListener<T extends keyof MessageType>(messageType: T, callback: MessageType[T])
     {
-        if(this.events.has(messageType) === false)
+        if (this.events.has(messageType) === false)
             this.events.set(messageType, []);
 
         this.events.get(messageType)?.push(callback);
@@ -33,12 +32,13 @@ class Messenger
 
     /**
      * Emits a message
-     * @param {MessageType} messageType Type of message to emit 
-     * @param {any} data Data to send with the message 
+     * @param {string} messageType Type of message to emit 
+     * @param {CallableFuction} data Data to send with the message 
      */
-    emit(messageType: MessageType, data: any)
+    emit<T extends keyof MessageType>(messageType: T, data: Parameters<MessageType[T]>[0] | null = null)
     {
-        this.events.get(messageType)?.forEach((callback) => {
+        this.events.get(messageType)?.forEach((callback) =>
+        {
             callback(data);
         })
     }

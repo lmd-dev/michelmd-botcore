@@ -1,8 +1,10 @@
-import { MessageCallback } from "../messenger/message-callback";
 import { MessageType } from "../messenger/message-type";
 import { messenger } from "../messenger/messenger";
 import { ModuleSetting } from "./module-setting";
 
+/**
+ * Base structure of a module data
+ */
 export type ModuleData = {
     enabled: boolean;
 }
@@ -77,14 +79,14 @@ export abstract class Module
      * @param {string} message Message to listen
      * @param {MessageCallback} callback Event manager to call when listening the message 
      */
-    addListener(message: MessageType, callback: MessageCallback) { messenger.addListener(message, callback); }
+    addListener<T extends keyof MessageType>(message: T, callback: MessageType[T]) { messenger.addListener(message, callback); }
 
     /**
      * Emits a message
      * @param {string} message Message to emit
      * @param {any} data Data to send with the message
      */
-    emit(message: MessageType, data: any = null) { messenger.emit(message, data); }
+    emit<T extends keyof MessageType>(message: T, data: Parameters<MessageType[T]>[0] | null = null) { messenger.emit(message, data); }
 
     /**
      * returns available settings for the module

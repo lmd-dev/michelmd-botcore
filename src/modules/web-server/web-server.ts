@@ -1,10 +1,14 @@
 import { Module, ModuleData } from "../module";
 import { fastify, FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 import cors from "@fastify/cors";
-import { HTTPRouteOptions } from "./http-route-options";
-import { HTTPRequestData } from "./http-request-data";
 import { MessageType } from "../../messenger/message-type";
 import { ModuleSetting } from "../module-setting";
+import { FastifySSEPlugin } from "fastify-sse-v2";
+import { HttpStreamOptions } from "./http-stream-options";
+import { Stream } from "./stream";
+import { StreamMessageOptions } from "./stream-message-options";
+import { HttpRouteOptions } from "./http-route-options";
+import { HttpRequestData } from "./http-request-data";
 
 export type WebServerData = ModuleData & {
     uri: string,
@@ -24,6 +28,9 @@ export class WebServer extends Module
     private _port: number;
     public get port(): number { return this._port; }
 
+    private _streams: Map<string, Stream>;
+    public get streams(): Map<string, Stream> { return this._streams; };
+
     //Fastify instance used by the web server
     private _fastify: FastifyInstance;
     public get fastify(): FastifyInstance { return this._fastify; };
@@ -37,14 +44,24 @@ export class WebServer extends Module
 
         this._uri = "http://localhost";
         this._port = 4000;
+        this._streams = new Map<string, Stream>();
 
         this._fastify = fastify();
         this._fastify.register(cors, {});
+        this._fastify.register(FastifySSEPlugin);
 
-        this.addListener(MessageType.WS_ADD_ROUTE, (routeOptions: HTTPRouteOptions) =>
+        this.addListener("ws_add_route", (routeOptions: HttpRouteOptions) =>
         {
             this.addRoute(routeOptions);
         });
+
+        this.addListener("ws_add_stream", (streamOptions: HttpStreamOptions) => {
+            this.addStream(streamOptions);
+        })
+
+        this.addListener("ws_send_on_stream", (messageOptions: StreamMessageOptions) => {
+            this.sendOnStream(messageOptions.streamName, messageOptions.message);    
+        })
     }
 
     /**
@@ -114,6 +131,8 @@ export class WebServer extends Module
         this.fastify.listen({ port: this._port });
 
         this.sendServerInfo();
+
+
     }
 
     /**
@@ -121,14 +140,14 @@ export class WebServer extends Module
      */
     public async restart(): Promise<void>
     {
-        this.emit(MessageType.RESTART);
+        this.emit("restart");
     }
 
     /**
      * Adds route to the web server
-     * @param {HTTPRouteOptions} routeOptions 
+     * @param {HttpRouteOptions} routeOptions 
      */
-    private addRoute(routeOptions: HTTPRouteOptions)
+    private addRoute(routeOptions: HttpRouteOptions)
     {
         this.fastify.route(
             {
@@ -148,9 +167,9 @@ export class WebServer extends Module
     /**
      * Extracts data (QueryString data, body data and URL data - params) from the client request
      * @param {FastifyRequest} request 
-     * @returns { HTTPRequestData }
+     * @returns { HttpRequestData }
      */
-    private extractDataFromRequest(request: FastifyRequest): HTTPRequestData
+    private extractDataFromRequest(request: FastifyRequest): HttpRequestData
     {
         return {
             queryString: request.query,
@@ -165,6 +184,26 @@ export class WebServer extends Module
      */
     private sendServerInfo()
     {
-        this.emit(MessageType.WS_INFO, { uri: this.uri, port: this.port });
+        this.emit("ws_info", { uri: this.uri, port: this.port });
+    }
+
+    private addStream(streamOptions: HttpStreamOptions)
+    {
+        const stream = new Stream(streamOptions.name)
+        this.streams.set(stream.name, stream);
+
+        this._fastify.get(streamOptions.uri, (request, reply) =>
+        {
+            stream.addClient(reply);
+
+            request.socket.on("close", () => {
+                stream.removeClient(reply);
+            })
+        })
+    }
+
+    private sendOnStream(streamId: string, message: string)
+    {
+        this.streams.get(streamId)?.emit(message);
     }
 }

@@ -1,1 +1,0 @@
-export type MessageCallback = (response: any) => void;

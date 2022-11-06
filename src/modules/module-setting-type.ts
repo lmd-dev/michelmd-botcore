@@ -1,3 +1,6 @@
+/**
+ * Available type of settings 
+ */
 export enum ModuleSettingType
 {
     TEXT = "text",

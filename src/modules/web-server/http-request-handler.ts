@@ -1,4 +1,7 @@
-import { HTTPRequestData } from "./http-request-data";
-import { HTTPResponseData } from "./http-response-data";
+import { HttpRequestData } from "./http-request-data";
+import { HttpResponseData } from "./http-response-data";
 
-export type HTTPRequestHandler = (data: HTTPRequestData) => Promise<HTTPResponseData>;
+/**
+ * Handler to execute on HTTP request
+ */
+export type HttpRequestHandler = (data: HttpRequestData) => Promise<HttpResponseData>;
